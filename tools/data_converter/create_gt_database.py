@@ -215,6 +215,26 @@ def create_groundtruth_database(dataset_class_name,
                     with_label_3d=True,
                     file_client_args=file_client_args)
             ])
+    elif dataset_class_name == 'Vkitti2Dataset':
+        file_client_args = dict(backend='disk')
+        dataset_cfg.update(
+            test_mode=False,
+            split='training',
+            modality=dict(
+                use_lidar=False,
+                use_depth=True,
+                use_lidar_intensity=False,
+                use_camera=with_mask,
+            ),
+            pipeline=[
+                dict(
+                    type='LoadAnnotations3D',
+                    with_bbox_3d=True,
+                    with_label_3d=True,
+                    file_client_args=file_client_args)
+            ])
+
+    
 
     dataset = build_dataset(dataset_cfg)
 
@@ -234,8 +254,8 @@ def create_groundtruth_database(dataset_class_name,
             file2id.update({info['file_name']: i})
 
     group_counter = 0
-    for j in track_iter_progress(list(range(len(dataset)))):
-        input_dict = dataset.get_data_info(j)
+    for j in track_iter_progress(list(range(len(dataset)))):  # datase这里 标注还是dimension/location
+        input_dict = dataset.get_data_info(j)  # 此处已有gt_bboxes_3d
         dataset.pre_pipeline(input_dict)
         example = dataset.pipeline(input_dict)
         annos = example['ann_info']

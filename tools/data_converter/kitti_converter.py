@@ -184,7 +184,7 @@ def create_kitti_info_file(data_path,
         save_path = Path(data_path)
     else:
         save_path = Path(save_path)
-    kitti_infos_train = get_kitti_image_info(
+    kitti_infos_train = get_kitti_image_info(   # json格式
         data_path,
         training=True,
         velodyne=True,

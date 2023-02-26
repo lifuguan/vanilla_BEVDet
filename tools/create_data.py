@@ -4,12 +4,20 @@ from os import path as osp
 
 from data_converter import indoor_converter as indoor
 from data_converter import kitti_converter as kitti
+from data_converter import vkitti2_converter as vkitti2
 from data_converter import lyft_converter as lyft_converter
 from data_converter import nuscenes_converter as nuscenes_converter
 from data_converter.create_gt_database import (
     GTDatabaseCreater, create_groundtruth_database)
 
-
+def vkitti2_data_prep(root_path):
+    vkitti2.create_kitti_info_file(root_path)
+    create_groundtruth_database(
+        'Vkitti2Dataset',
+        root_path,
+        info_prefix=None,
+        mask_anno_path='mono3d_info_train.json',
+        with_mask=False)
 def kitti_data_prep(root_path,
                     info_prefix,
                     version,
