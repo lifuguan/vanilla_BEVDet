@@ -10,14 +10,24 @@ from data_converter import nuscenes_converter as nuscenes_converter
 from data_converter.create_gt_database import (
     GTDatabaseCreater, create_groundtruth_database)
 
-def vkitti2_data_prep(root_path):
+def vkitti2_data_prep(root_path, info_prefix, out_dir):
+    """Prepare data related to Kitti dataset.
+    """
     vkitti2.create_kitti_info_file(root_path)
+    info_train_path = osp.join(root_path, f'mono3d_infos_train.pkl')
+    info_test_path = osp.join(root_path, f'mono3d_infos_test.pkl')
+    vkitti2.export_3d_annotation(root_path, info_train_path)
+    vkitti2.export_3d_annotation(root_path, info_test_path)
+
     create_groundtruth_database(
         'Vkitti2Dataset',
         root_path,
-        info_prefix=None,
-        mask_anno_path='mono3d_info_train.json',
+        info_prefix,
+        f'{out_dir}/mono3d_infos_train.pkl',
+        relative_path=False,
+        mask_anno_path='mono3d_infos_train.coco.json',
         with_mask=False)
+
 def kitti_data_prep(root_path,
                     info_prefix,
                     version,
@@ -36,8 +46,8 @@ def kitti_data_prep(root_path,
         with_plane (bool, optional): Whether to use plane information.
             Default: False.
     """
-    kitti.create_kitti_info_file(root_path, info_prefix, with_plane)
-    kitti.create_reduced_point_cloud(root_path, info_prefix)
+    # kitti.create_kitti_info_file(root_path, info_prefix, with_plane)
+    # kitti.create_reduced_point_cloud(root_path, info_prefix)
 
     info_train_path = osp.join(root_path, f'{info_prefix}_infos_train.pkl')
     info_val_path = osp.join(root_path, f'{info_prefix}_infos_val.pkl')
@@ -319,3 +329,10 @@ if __name__ == '__main__':
             num_points=args.num_points,
             out_dir=args.out_dir,
             workers=args.workers)
+    elif args.dataset == 'vkitti2':
+        vkitti2_data_prep(
+            root_path=args.root_path,
+            out_dir=args.out_dir,
+            info_prefix=args.extra_tag,
+        )
+
