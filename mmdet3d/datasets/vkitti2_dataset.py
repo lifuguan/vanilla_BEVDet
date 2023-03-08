@@ -12,6 +12,9 @@ from ..core.bbox import Box3DMode, CameraInstance3DBoxes, points_cam2img
 from .builder import DATASETS
 from .nuscenes_mono_dataset import NuScenesMonoDataset
 
+from ..core import show_multi_modality_result
+
+
 
 @DATASETS.register_module()
 class Vkitti2Dataset(NuScenesMonoDataset):
@@ -268,6 +271,45 @@ class Vkitti2Dataset(NuScenesMonoDataset):
             self.show(results, out_dir, show=show, pipeline=pipeline)
         return ap_dict
 
+    def show(self, results, out_dir, show=False, pipeline=None):
+        """Results visualization.
+
+        Args:
+            results (list[dict]): List of bounding boxes results.
+            out_dir (str): Output directory of visualization result.
+            show (bool): Whether to visualize the results online.
+                Default: False.
+            pipeline (list[dict], optional): raw data loading for showing.
+                Default: None.
+        """
+        assert out_dir is not None, 'Expect out_dir, got none.'
+        pipeline = self._get_pipeline(pipeline)
+        for i, result in enumerate(results):
+            if 'img_bbox' in result.keys():
+                result = result['img_bbox']
+            data_info = self.data_infos[i]
+            img_path = data_info['file_name']
+            file_name = osp.split(img_path)[-1].split('.')[0]
+            img, img_metas = self._extract_data(i, pipeline,
+                                                ['img', 'img_metas'])
+            gt_bboxes = self.get_ann_info(i)['gt_bboxes_3d']
+            pred_bboxes = result['boxes_3d']
+            cam_intrinsic = np.array(
+                [[725.0087,  0.     ,  620.5,  0.],
+                [0.      ,  725.0087,  187. ,  0.],
+                [0.      ,  0.      ,  1.   ,  0.],
+                [0.      ,  0.      ,  0.   ,  1.]])
+            show_multi_modality_result(
+                img,
+                gt_bboxes,
+                pred_bboxes,
+                cam_intrinsic,
+                out_dir,
+                file_name,
+                box_mode='camera',
+                show=show)
+
+
     def bbox2result_kitti(self,
                           net_outputs,
                           class_names,
@@ -315,11 +357,10 @@ class Vkitti2Dataset(NuScenesMonoDataset):
                 box_2d_preds = box_dict['bbox']
                 box_preds = box_dict['box3d_camera']
                 scores = box_dict['scores']
-                box_preds_lidar = box_dict['box3d_lidar']
                 label_preds = box_dict['label_preds']
 
-                for box, box_lidar, bbox, score, label in zip(
-                        box_preds, box_preds_lidar, box_2d_preds, scores,
+                for box, bbox, score, label in zip(
+                        box_preds, box_2d_preds, scores,
                         label_preds):
                     bbox[2:] = np.minimum(bbox[2:], image_shape[::-1])
                     bbox[:2] = np.maximum(bbox[:2], [0, 0])
@@ -526,15 +567,11 @@ class Vkitti2Dataset(NuScenesMonoDataset):
                 label_preds=np.zeros([0, 4]),
                 sample_idx=sample_idx)
 
-        rect = info['calib']['R0_rect'].astype(np.float32)
-        Trv2c = info['calib']['Tr_velo_to_cam'].astype(np.float32)
-        P2 = info['calib']['P2'].astype(np.float32)
+        P2 = info['calib']['P0'].astype(np.float32)
         img_shape = info['image']['image_shape']
         P2 = box_preds.tensor.new_tensor(P2)
 
         box_preds_camera = box_preds
-        box_preds_lidar = box_preds.convert_to(Box3DMode.LIDAR,
-                                               np.linalg.inv(rect @ Trv2c))
 
         box_corners = box_preds_camera.corners
         box_corners_in_image = points_cam2img(box_corners, P2)
@@ -555,7 +592,6 @@ class Vkitti2Dataset(NuScenesMonoDataset):
             return dict(
                 bbox=box_2d_preds[valid_inds, :].numpy(),
                 box3d_camera=box_preds_camera[valid_inds].tensor.numpy(),
-                box3d_lidar=box_preds_lidar[valid_inds].tensor.numpy(),
                 scores=scores[valid_inds].numpy(),
                 label_preds=labels[valid_inds].numpy(),
                 sample_idx=sample_idx)
@@ -563,7 +599,6 @@ class Vkitti2Dataset(NuScenesMonoDataset):
             return dict(
                 bbox=np.zeros([0, 4]),
                 box3d_camera=np.zeros([0, 7]),
-                box3d_lidar=np.zeros([0, 7]),
                 scores=np.zeros([0]),
                 label_preds=np.zeros([0, 4]),
                 sample_idx=sample_idx)

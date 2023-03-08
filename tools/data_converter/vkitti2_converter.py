@@ -41,7 +41,8 @@ def export_3d_annotation(root_path, info_path):
 
     # get bbox annotations for camera
     kitti_infos = mmcv.load(info_path)
-    cat2Ids = ['Car']
+    cat2Ids = [{'id': 0, 'name': 'Car'}]
+
     coco_ann_id = 0
     coco_2d_dict = dict(annotations=[], images=[], categories=cat2Ids)
     from os import path as osp
@@ -65,7 +66,7 @@ def export_3d_annotation(root_path, info_path):
             coco_info['id'] = coco_ann_id
             coco_2d_dict['annotations'].append(coco_info)
             coco_ann_id += 1
-    json_prefix = f'{info_path[:-4]}_mono3d'
+    json_prefix = f'{info_path[:-4]}'
     mmcv.dump(coco_2d_dict, f'{json_prefix}.coco.json')
 
 
@@ -111,7 +112,7 @@ def get_2d_boxes(info, occluded_thres, mono3d=True):
         ann_rec['sample_data_token'] = info['image']['image_idx']
         sample_data_token = info['image']['image_idx']
 
-        loc = ann_rec['location_y'][np.newaxis, :]
+        loc = ann_rec['location'][np.newaxis, :]
         dim = ann_rec['dimensions'][np.newaxis, :]
         rot = ann_rec['rotation_y'][np.newaxis, np.newaxis]
         # transform the center from [0.5, 1.0, 0.5] to [0.5, 0.5, 0.5]

@@ -18,7 +18,7 @@ def vkitti2_data_prep(root_path, info_prefix, out_dir):
     info_test_path = osp.join(root_path, f'mono3d_infos_test.pkl')
     vkitti2.export_3d_annotation(root_path, info_train_path)
     vkitti2.export_3d_annotation(root_path, info_test_path)
-
+    return None
     create_groundtruth_database(
         'Vkitti2Dataset',
         root_path,

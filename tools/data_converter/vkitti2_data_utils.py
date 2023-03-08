@@ -37,7 +37,7 @@ def get_vkitti2_image_info(path, training=True):
         annos = []
         for key, value in mmcv.track_iter_progress(dic.items()):
             anno = {"image":{}, "calib":{}, "annos":{
-                'trackID':np.array([]), 'alpha':np.array([]), 'dimensions':np.empty((0,3)), 'location_y':np.empty((0,3)), 'rotation_y':np.empty((0,3)), 'location_w':np.empty((0,3)), 'rotation_w':np.empty((0,3)), 'truncated':np.array([]), 'occluded':np.array([]), 'isMoving':np.array([]),'num_points_in_gt':np.array([])}}
+                'trackID':np.array([]), 'alpha':np.array([]), 'dimensions':np.empty((0,3)), 'location':np.empty((0,3)), 'rotation_y':np.empty((0,3)), 'location_w':np.empty((0,3)), 'rotation_w':np.empty((0,3)), 'truncated':np.array([]), 'occluded':np.array([]), 'isMoving':np.array([]),'num_points_in_gt':np.array([]),'bbox':np.empty((0,4))}}
 
             # meta data
             idx = int(key[:-2])
@@ -55,13 +55,20 @@ def get_vkitti2_image_info(path, training=True):
             for column in value:
                 anno['annos']['trackID'] = np.append(anno['annos']['trackID'], column[0][2])
                 anno['annos']['alpha'] = np.append(anno['annos']['alpha'], column[0][3]) 
-                anno['annos']['dimensions'] = np.append(anno['annos']['dimensions'], [column[0][4:7]], axis=0)
+
+                # vkitti2:width, height, length;   kitti: height, width, length
+                anno['annos']['dimensions'] = np.append(anno['annos']['dimensions'], [[column[0][5],column[0][4],column[0][6]]], axis=0)
                 anno['annos']['location_w']= np.append(anno['annos']['location_w'], [column[0][7:10]], axis=0)
                 anno['annos']['rotation_w']= np.append(anno['annos']['rotation_w'], column[0][10])  # 只使用y轴
-                anno['annos']['location_y']= np.append(anno['annos']['location_y'], [column[0][13:16]], axis=0)
-                anno['annos']['rotation_y']= np.append(anno['annos']['rotation_y'], column[0][16])  # 只使用y轴
-                anno['annos']['truncated'] = np.append(anno['annos']['truncated'] , column[1][-3])
-                anno['annos']['occluded'] = np.append(anno['annos']['occluded']  , column[1][-2])
+                anno['annos']['location']= np.append(anno['annos']['location'], [column[0][13:16]], axis=0)
+                # anno['annos']['rotation_y']= np.append(anno['annos']['rotation_y'], column[0][16])  # 只使用y轴
+                anno['annos']['rotation_y']= np.append(anno['annos']['rotation_y'], column[0][16]+1.57)  # 只使用y轴
+                # anno['annos']['rotation_y']= np.append(anno['annos']['rotation_y'], 0)  # 只使用y轴
+
+                # vkitti2:left, right, top, bottom;   kitti: left, top, right, bottom
+                anno['annos']['bbox'] = np.append(anno['annos']['bbox'] , [np.float_([column[1][3],column[1][5],column[1][4],column[1][6]])], axis=0)
+                anno['annos']['truncated'] = np.append(anno['annos']['truncated'] , float(column[1][-3]))
+                anno['annos']['occluded'] = np.append(anno['annos']['occluded']  , float(column[1][-2]))
                 anno['annos']['isMoving'] = np.append(anno['annos']['isMoving']  , column[1][-1])
                 anno['annos']['num_points_in_gt'] = np.append(anno['annos']['num_points_in_gt'], 300)
             annos.append(anno)

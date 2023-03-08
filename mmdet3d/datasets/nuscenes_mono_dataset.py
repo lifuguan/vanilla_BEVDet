@@ -669,7 +669,7 @@ class NuScenesMonoDataset(CocoDataset):
             img, img_metas = self._extract_data(i, pipeline,
                                                 ['img', 'img_metas'])
             # need to transpose channel to first dim
-            img = img.numpy().transpose(1, 2, 0)
+            img = img.transpose(1, 2, 0)
             gt_bboxes = self.get_ann_info(i)['gt_bboxes_3d']
             pred_bboxes = result['boxes_3d']
             show_multi_modality_result(
