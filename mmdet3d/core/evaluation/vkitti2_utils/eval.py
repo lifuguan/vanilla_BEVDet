@@ -177,7 +177,7 @@ def compute_statistics_jit(overlaps,
     gt_size = gt_datas.shape[0]
     dt_scores = dt_datas[:, -1]
     dt_alphas = dt_datas[:, 4]
-    gt_alphas = gt_datas[:, 4]  
+    gt_alphas = gt_datas[:, 4]
     dt_bboxes = dt_datas[:, :4]
     # gt_bboxes = gt_datas[:, :4]
 
@@ -659,7 +659,7 @@ def do_coco_style_eval(gt_annos, dt_annos, current_classes, overlap_ranges,
     return mAP_bbox, mAP_bev, mAP_3d, mAP_aos
 
 
-def kitti_eval(gt_annos,
+def vkitti2_eval(gt_annos,
                dt_annos,
                current_classes,
                eval_types=['bbox', 'bev', '3d']):
@@ -678,19 +678,11 @@ def kitti_eval(gt_annos,
     assert len(eval_types) > 0, 'must contain at least one evaluation type'
     if 'aos' in eval_types:
         assert 'bbox' in eval_types, 'must evaluate bbox when evaluating aos'
-    overlap_0_7 = np.array([[0.7, 0.5, 0.5, 0.7,
-                             0.5], [0.7, 0.5, 0.5, 0.7, 0.5],
-                            [0.7, 0.5, 0.5, 0.7, 0.5]])
-    overlap_0_5 = np.array([[0.7, 0.5, 0.5, 0.7, 0.5],
-                            [0.5, 0.25, 0.25, 0.5, 0.25],
-                            [0.5, 0.25, 0.25, 0.5, 0.25]])
-    min_overlaps = np.stack([overlap_0_7, overlap_0_5], axis=0)  # [2, 3, 5]
+    overlap_0_7 = np.array([[0.7], [0.7], [0.7]])
+    overlap_0_5 = np.array([[0.7], [0.5], [0.5]])
+    min_overlaps = np.stack([overlap_0_7, overlap_0_5], axis=0)  # [2, 3, 1]
     class_to_name = {
-        0: 'Car',
-        1: 'Pedestrian',
-        2: 'Cyclist',
-        3: 'Van',
-        4: 'Person_sitting',
+        0: 'Car'
     }
     name_to_class = {v: n for n, v in class_to_name.items()}
     if not isinstance(current_classes, (list, tuple)):
@@ -878,7 +870,7 @@ def kitti_eval(gt_annos,
     return result, ret_dict
 
 
-def kitti_eval_coco_style(gt_annos, dt_annos, current_classes):
+def vkitti2_eval_coco_style(gt_annos, dt_annos, current_classes):
     """coco style evaluation of kitti.
 
     Args:
@@ -890,18 +882,10 @@ def kitti_eval_coco_style(gt_annos, dt_annos, current_classes):
         string: Evaluation results.
     """
     class_to_name = {
-        0: 'Car',
-        1: 'Pedestrian',
-        2: 'Cyclist',
-        3: 'Van',
-        4: 'Person_sitting',
+        0: 'Car'
     }
     class_to_range = {
-        0: [0.5, 0.95, 10],
-        1: [0.25, 0.7, 10],
-        2: [0.25, 0.7, 10],
-        3: [0.5, 0.95, 10],
-        4: [0.25, 0.7, 10],
+        0: [0.5, 0.95, 10]
     }
     name_to_class = {v: n for n, v in class_to_name.items()}
     if not isinstance(current_classes, (list, tuple)):

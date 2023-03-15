@@ -62,13 +62,15 @@ def get_vkitti2_image_info(path, training=True):
                 anno['annos']['rotation_w']= np.append(anno['annos']['rotation_w'], column[0][10])  # 只使用y轴
                 anno['annos']['location']= np.append(anno['annos']['location'], [column[0][13:16]], axis=0)
                 # anno['annos']['rotation_y']= np.append(anno['annos']['rotation_y'], column[0][16])  # 只使用y轴
-                anno['annos']['rotation_y']= np.append(anno['annos']['rotation_y'], column[0][16]+1.57)  # 只使用y轴
-                # anno['annos']['rotation_y']= np.append(anno['annos']['rotation_y'], 0)  # 只使用y轴
+                anno['annos']['rotation_y']= np.append(anno['annos']['rotation_y'], column[0][16] - 1.57)  # 只使用y轴
 
                 # vkitti2:left, right, top, bottom;   kitti: left, top, right, bottom
                 anno['annos']['bbox'] = np.append(anno['annos']['bbox'] , [np.float_([column[1][3],column[1][5],column[1][4],column[1][6]])], axis=0)
                 anno['annos']['truncated'] = np.append(anno['annos']['truncated'] , float(column[1][-3]))
-                anno['annos']['occluded'] = np.append(anno['annos']['occluded']  , float(column[1][-2]))
+
+                # vkitti2: 0: fully occluded, 1: fully visible; kitti: 0 = fully visible, 1 = partly occluded 2 = largely occluded, 3 = unknown
+                occluded = 3 - int(float(column[1][-2]) / 0.25)
+                anno['annos']['occluded'] = np.append(anno['annos']['occluded']  , occluded)
                 anno['annos']['isMoving'] = np.append(anno['annos']['isMoving']  , column[1][-1])
                 anno['annos']['num_points_in_gt'] = np.append(anno['annos']['num_points_in_gt'], 300)
             annos.append(anno)
